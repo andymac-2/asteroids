@@ -1,0 +1,86 @@
+-- This file has been generated from package.yaml by hpack version 0.28.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 734c2e1e1ff383560f36280ea3f7131ba7622bd00614dcf58dbf5770d8f807cd
+
+name:           asteroids
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/andymac-2/asteroids>
+homepage:       https://github.com/andymac-2/asteroids#readme
+bug-reports:    https://github.com/andymac-2/asteroids/issues
+author:         Andrew Pritchard
+maintainer:     https://github.com/andymac-2
+copyright:      2018 Andrew Pritchard
+license:        GPL-3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+extra-source-files:
+    ChangeLog.md
+    README.md
+data-files:
+    src/assets/Asteroid1.bmp
+    src/assets/Asteroid2.bmp
+    src/assets/Asteroid3.bmp
+    src/assets/Asteroid4.bmp
+    src/assets/GameOver.bmp
+    src/assets/Paused.bmp
+    src/assets/PressSpaceToBegin.bmp
+    src/assets/ShipFiring.bmp
+    src/assets/ShipNoFire.bmp
+
+source-repository head
+  type: git
+  location: https://github.com/andymac-2/asteroids
+
+library
+  exposed-modules:
+      Colors
+      Event
+      GameState
+      Geometry
+      Globals
+      Lib
+      Resources
+  other-modules:
+      Paths_asteroids
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , mtl
+    , random
+    , sdl2
+  default-language: Haskell2010
+
+executable asteroids-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_asteroids
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Werror
+  build-depends:
+      asteroids
+    , base >=4.7 && <5
+    , mtl
+    , random
+    , sdl2
+  default-language: Haskell2010
+
+test-suite asteroids-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_asteroids
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      asteroids
+    , base >=4.7 && <5
+    , mtl
+    , random
+    , sdl2
+  default-language: Haskell2010

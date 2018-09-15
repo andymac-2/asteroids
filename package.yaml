@@ -1,0 +1,68 @@
+name:                asteroids
+version:             0.1.0.0
+github:              "andymac-2/asteroids"
+license:             GPL-3
+author:              "Andrew Pritchard"
+maintainer:          "https://github.com/andymac-2"
+copyright:           "2018 Andrew Pritchard"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+data-files:
+- src/assets/ShipNoFire.bmp
+- src/assets/ShipFiring.bmp
+
+- src/assets/Asteroid1.bmp
+- src/assets/Asteroid2.bmp
+- src/assets/Asteroid3.bmp
+- src/assets/Asteroid4.bmp
+
+- src/assets/PressSpaceToBegin.bmp
+- src/assets/GameOver.bmp
+- src/assets/Paused.bmp
+
+
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/andymac-2/asteroids>
+
+dependencies:
+- base >= 4.7 && < 5
+- sdl2
+- random
+- mtl
+
+
+library:
+  source-dirs: src
+
+executables:
+  asteroids-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    - -Werror
+    dependencies:
+    - asteroids
+
+tests:
+  asteroids-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - asteroids
