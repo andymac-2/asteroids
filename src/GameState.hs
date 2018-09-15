@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module GameState
     ( draw
     , Game
@@ -7,6 +8,10 @@ module GameState
 
 import qualified SDL as SDL
 import SDL (V2(V2), ($=))
+import qualified SDL.Font as Font
+
+import qualified Data.Text as Text
+
 import Colors (Color, white)
 import Foreign.C.Types (CInt, CDouble)
 import Data.Foldable (traverse_, foldl')
@@ -48,15 +53,26 @@ copyCentre r tex = do
                 (V2 w h)
         SDL.copy r tex Nothing (Just rect)
 
+writeFont :: SDL.Renderer -> Font.Font -> V2 CInt -> Text.Text -> IO ()
+writeFont r font pos str = do
+    surface <- Font.solid font white str
+    texture <- SDL.createTextureFromSurface r surface
+    (SDL.TextureInfo _ _ w h) <- SDL.queryTexture texture
+
+    SDL.copy r texture Nothing (Just (SDL.Rectangle (SDL.P pos) (V2 w h)))
+
+    SDL.destroyTexture texture
+    SDL.freeSurface surface
 
 -------------------------------------------------------------------------------
--- | A single asteroid
-data Asteroid = Asteroid
-    CInt            -- ^ The radius of the asteroid in subpixels
-    Int             -- ^ The sprite index number
-    IntVec          -- ^ The velocity of the asteroid in subpixels per ms
-    IntVec          -- ^ The position of the asteroid in subpixels
-    RNG.StdGen      -- ^ The RNG for random initial velocity
+-- | A single asteroid. Takes 5 arguents:
+--
+-- * The radius of the asteroid in subpixels
+-- * The sprite index number
+-- * The velocity of the asteroid in subpixels per ms
+-- * The position of the asteroid in subpixels
+-- * The RNG for random initial velocity
+data Asteroid = Asteroid CInt Int IntVec IntVec RNG.StdGen
 
 -- | The initial asteroid radius in subpixels
 asteroidRadius :: CInt
@@ -69,7 +85,7 @@ asteroidMinRadius = 9 * subpixels
 -- this is the maximum velocity for an asteroid of radius 1. Larger radius will
 -- have correspondingly smaller maximum velocities.
 asteroidMaxVel :: CInt
-asteroidMaxVel = 400000
+asteroidMaxVel = 500000
 
 newBigAsteroid :: RNG.StdGen -> (Asteroid, RNG.StdGen)
 newBigAsteroid rng = (newAsteroid rng2, rng1) where
@@ -155,12 +171,13 @@ instance (Drawable g) => Drawable [g] where
     draw r res gs = traverse_ (draw r res) gs 
 
 -------------------------------------------------------------------------------
--- | The spaceship
-data Ship = Ship
-    IntVec      -- ^ The velocity of the spaceship in subpixels per ms
-    IntVec      -- ^ The position of the spaceship in subpixels
-    CDouble     -- ^ The rotation of the spaceship in radians
-    Bool        -- ^ Whether or not the engines are firing
+-- | The spaceship. Takes four arguments
+--
+-- * The velocity of the spaceship in subpixels per ms
+-- * The position of the spaceship in subpixels
+-- * The rotation of the spaceship in radians
+-- * Whether or not the engines are firing
+data Ship = Ship IntVec IntVec CDouble Bool
 
 -- | Create a new ship
 newShip :: Ship
@@ -223,10 +240,11 @@ instance Drawable Ship where
         in SDL.copyEx r tex Nothing (Just rect) rotation Nothing noFlip
 
 -------------------------------------------------------------------------------
--- | A bullet
-data Bullet = Bullet
-    IntVec      -- ^ The velocity of the bullet in subpixels per ms
-    IntVec      -- ^ The position of the bullet in subpixels
+-- | A bullet Takes two arguments:
+--
+-- * The velocity of the bullet in subpixels per ms
+-- * The position of the bullet in subpixels
+data Bullet = Bullet IntVec IntVec
 
 bulletInitSpeed :: CInt
 bulletInitSpeed = 4000
@@ -272,17 +290,42 @@ updateBulletsNoShip dt bs =
 
 -------------------------------------------------------------------------------
 -- | The current game score.
-type Score = CInt
+newtype Score = Score CInt
 
-updateScore :: CInt -> CInt -> CInt
-updateScore = (+)
+zeroScore :: Score
+zeroScore = Score 0
 
+scorePosition :: V2 CInt
+scorePosition = V2 32 32
+
+updateScore :: Score -> Score -> Score
+updateScore (Score x) (Score y) = Score (x + y)
+
+instance Show Score where
+    show (Score x) = show x
+
+instance Drawable Score where
+    draw r res sc = let
+        text = "SCORE: " `Text.append` Text.pack (show sc)
+        in writeFont r (Res.regularFont res) scorePosition text
+        
 -------------------------------------------------------------------------------
 -- | The current game level.
 newtype Level = Level Int
 
+levelPosition :: V2 CInt
+levelPosition = V2 32 64
+
 incLevel :: Level -> Level
 incLevel (Level x) = Level (x + 1)
+
+instance Show Level where
+    show (Level x) = show x
+
+instance Drawable Level where
+    draw r res lv = let
+        text = "LEVEL: " `Text.append` Text.pack (show lv)
+        in writeFont r (Res.regularFont res) levelPosition text
 
 -------------------------------------------------------------------------------
 -- | The current game level.
@@ -303,8 +346,9 @@ numberAsteroids (Level x) = x + 3
 
 -- | Create a new active game
 newActiveGame :: RNG.StdGen -> ActiveGame
-newActiveGame rng = ActiveGame newShip as [] 0 rng' (Lives 3) (Level 1) where
+newActiveGame rng = let
     (as, rng') = newAsteroids rng (numberAsteroids (Level 1))
+    in ActiveGame newShip as [] zeroScore rng' (Lives 3) (Level 1) 
 
 isGameOver :: ActiveGame -> Bool
 isGameOver (DeadInGame time _ _ _ _ (Lives liv) _)
@@ -364,7 +408,7 @@ updateActiveGame dt ks (ActiveGame sh as bs sc rng liv lev) = let
     (bullets, asteroids, sInc) = bulletAsteroidCollisions bs' as'
 
     ship = updateShip dt ks sh
-    score = updateScore sInc sc
+    score = updateScore (Score sInc) sc
 
     in case (asteroids, shipAsteroidsCollision sh asteroids) of
         ([], _) -> FinishedLevel levelWait ship bullets score rng liv lev
@@ -386,22 +430,28 @@ updateActiveGame dt ks (DeadInGame timeLeft as bs sc rng l@(Lives liv) lev)
         as' = updateAsteroids dt as
         bs' = updateBulletsNoShip dt bs
 
-        score = updateScore sInc sc
+        score = updateScore (Score sInc) sc
         (bullets, asteroids, sInc) = bulletAsteroidCollisions bs' as'
 
         in DeadInGame (timeLeft - dt) asteroids bullets score rng l lev
 
 instance Drawable ActiveGame where
-    draw r res (ActiveGame ship asteroids bullets score _ _ _) =
-        draw r res asteroids
-        <* draw r res bullets
-        <* draw r res ship
-    draw r res (FinishedLevel _ sh bs _ _ _ _) =
+    draw r res (ActiveGame sh as bs sc _ _ lev) =
+        draw r res as
+        <* draw r res bs
+        <* draw r res sh
+        <* draw r res sc
+        <* draw r res lev
+    draw r res (FinishedLevel _ sh bs sc _ _ lev) =
         draw r res bs
         <* draw r res sh
-    draw r res (DeadInGame _ as bs _ _ _ _) =
+        <* draw r res sc
+        <* draw r res lev
+    draw r res (DeadInGame _ as bs sc _ _ lev) =
         draw r res as
-        *> draw r res bs
+        <* draw r res bs
+        <* draw r res sc
+        <* draw r res lev
 
 
 -------------------------------------------------------------------------------

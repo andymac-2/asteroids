@@ -5,7 +5,9 @@ module Lib
 
 import qualified SDL as SDL
 import SDL (($=))
-import SDL.Vect (V4(V4), V2(V2))
+import qualified SDL.Font
+
+import Control.Concurrent (threadDelay)
 
 import qualified Event as E
 import GameState 
@@ -24,7 +26,8 @@ import qualified System.Random as RNG
 main :: IO ()
 main = do
     SDL.initializeAll
-    window <- SDL.createWindow "My SDL Application" SDL.defaultWindow
+    SDL.Font.initialize
+    window <- SDL.createWindow "Asteroids" SDL.defaultWindow
     renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
     resources <- loadResources renderer
     rng <- RNG.newStdGen
@@ -46,7 +49,7 @@ appLoop time' keys' renderer resources state = do
     G.draw renderer resources state'
 
     SDL.present renderer
-    SDL.delay (10)
+    threadDelay (10000)
     if (E.quit keys == E.Held)
         then SDL.quit
         else appLoop time keys renderer resources state'

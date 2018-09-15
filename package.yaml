@@ -9,20 +9,22 @@ copyright:           "2018 Andrew Pritchard"
 extra-source-files:
 - README.md
 - ChangeLog.md
+- licenses/PressStartPlayer2LICENSE.txt
+
 data-files:
-- src/assets/ShipNoFire.bmp
-- src/assets/ShipFiring.bmp
+- assets/ShipNoFire.bmp
+- assets/ShipFiring.bmp
 
-- src/assets/Asteroid1.bmp
-- src/assets/Asteroid2.bmp
-- src/assets/Asteroid3.bmp
-- src/assets/Asteroid4.bmp
+- assets/Asteroid1.bmp
+- assets/Asteroid2.bmp
+- assets/Asteroid3.bmp
+- assets/Asteroid4.bmp
 
-- src/assets/PressSpaceToBegin.bmp
-- src/assets/GameOver.bmp
-- src/assets/Paused.bmp
+- assets/PressSpaceToBegin.bmp
+- assets/GameOver.bmp
+- assets/Paused.bmp
 
-
+- assets/PressStart2P.ttf
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -36,8 +38,10 @@ description:         Please see the README on GitHub at <https://github.com/andy
 dependencies:
 - base >= 4.7 && < 5
 - sdl2
+- sdl2-ttf
 - random
 - mtl
+- text
 
 
 library:
@@ -53,6 +57,7 @@ executables:
     - -with-rtsopts=-N
     - -Wall
     - -Werror
+    - -O2
     dependencies:
     - asteroids
 

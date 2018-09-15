@@ -6,6 +6,7 @@ module Resources
 
 import qualified SDL as SDL
 import Paths_asteroids (getDataFileName)
+import qualified SDL.Font as Font
 
 
 data Resources = Resources
@@ -17,6 +18,7 @@ data Resources = Resources
     , pressSpaceText :: SDL.Texture
     , gameOverText :: SDL.Texture
     , pausedText :: SDL.Texture
+    , regularFont :: Font.Font
     }
 
 maxAsteroidSpriteIndex :: Int
@@ -28,16 +30,24 @@ textureFromBmp renderer path = do
     surface <- SDL.loadBMP fileName
     SDL.createTextureFromSurface renderer surface
 
+loadFont :: FilePath -> Font.PointSize -> IO Font.Font
+loadFont path size = do
+    fileName <- getDataFileName path
+    Font.load fileName size
+
 loadResources :: SDL.Renderer -> IO Resources
 loadResources r = Resources 
-    <$> textureFromBmp r "src/assets/ShipNoFire.bmp"    -- shipSprite
-    <*> textureFromBmp r "src/assets/ShipFiring.bmp"    -- shipSpriteFiring
+    <$> textureFromBmp r "assets/ShipNoFire.bmp"    -- shipSprite
+    <*> textureFromBmp r "assets/ShipFiring.bmp"    -- shipSpriteFiring
     <*> traverse (textureFromBmp r)                     -- asteroidSprites
-        [ "src/assets/Asteroid1.bmp"
-        , "src/assets/Asteroid2.bmp"
-        , "src/assets/Asteroid3.bmp"
-        , "src/assets/Asteroid4.bmp"
+        [ "assets/Asteroid1.bmp"
+        , "assets/Asteroid2.bmp"
+        , "assets/Asteroid3.bmp"
+        , "assets/Asteroid4.bmp"
         ]
-    <*> textureFromBmp r "src/assets/PressSpaceToBegin.bmp" -- pressSpaceText
-    <*> textureFromBmp r "src/assets/GameOver.bmp"          -- gameOverText
-    <*> textureFromBmp r "src/assets/Paused.bmp"            -- pausedText
+    <*> textureFromBmp r "assets/PressSpaceToBegin.bmp" -- pressSpaceText
+    <*> textureFromBmp r "assets/GameOver.bmp"          -- gameOverText
+    <*> textureFromBmp r "assets/Paused.bmp"            -- pausedText
+    <*> loadFont "assets/PressStart2P.ttf" 17           -- regularFont
+
+
