@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bd69bdfbccfee8a70ad7458b10bbeda7e7188dba9f406383b5399918336f5eec
+-- hash: 407c25ade6bdfdd8521f5e4eff1c1c329a355092903fe639caae3038f8eea407
 
 name:           asteroids
 version:        0.1.0.0
@@ -25,9 +25,6 @@ data-files:
     assets/Asteroid2.bmp
     assets/Asteroid3.bmp
     assets/Asteroid4.bmp
-    assets/GameOver.bmp
-    assets/Paused.bmp
-    assets/PressSpaceToBegin.bmp
     assets/PressStart2P.ttf
     assets/ShipFiring.bmp
     assets/ShipNoFire.bmp

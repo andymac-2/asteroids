@@ -15,10 +15,8 @@ data Resources = Resources
 
     , asteroidSprites :: [SDL.Texture]
 
-    , pressSpaceText :: SDL.Texture
-    , gameOverText :: SDL.Texture
-    , pausedText :: SDL.Texture
     , regularFont :: Font.Font
+    , bigFont :: Font.Font
     }
 
 maxAsteroidSpriteIndex :: Int
@@ -45,9 +43,7 @@ loadResources r = Resources
         , "assets/Asteroid3.bmp"
         , "assets/Asteroid4.bmp"
         ]
-    <*> textureFromBmp r "assets/PressSpaceToBegin.bmp" -- pressSpaceText
-    <*> textureFromBmp r "assets/GameOver.bmp"          -- gameOverText
-    <*> textureFromBmp r "assets/Paused.bmp"            -- pausedText
     <*> loadFont "assets/PressStart2P.ttf" 17           -- regularFont
+    <*> loadFont "assets/PressStart2P.ttf" 40           -- bigFont
 
 

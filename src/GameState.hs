@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE BangPatterns #-}
 module GameState
     ( draw
     , Game
@@ -42,17 +43,6 @@ inBounds (V2 x y)
     | x >= 0 && x < screenWidth && y >=0 && y < screenHeight = True
     | otherwise = False
 
--- | draw a tecture to the centre of the screen
-copyCentre :: SDL.Renderer -> SDL.Texture -> IO ()
-copyCentre r tex = do
-        (SDL.TextureInfo _ _ w h) <- SDL.queryTexture tex
-        let rect = SDL.Rectangle 
-                (SDL.P (V2 
-                    ((G.fromSubpixels screenWidth - w) `quot` 2) 
-                    ((G.fromSubpixels screenHeight - h) `quot` 2))) 
-                (V2 w h)
-        SDL.copy r tex Nothing (Just rect)
-
 writeFont :: SDL.Renderer -> Font.Font -> V2 CInt -> Text.Text -> IO ()
 writeFont r font pos str = do
     surface <- Font.solid font white str
@@ -63,6 +53,23 @@ writeFont r font pos str = do
 
     SDL.destroyTexture texture
     SDL.freeSurface surface
+
+writeFontCentred :: SDL.Renderer -> Font.Font -> Text.Text -> IO ()
+writeFontCentred r font str = do
+    surface <- Font.solid font white str
+    texture <- SDL.createTextureFromSurface r surface
+    (SDL.TextureInfo _ _ w h) <- SDL.queryTexture texture
+    let rect = SDL.Rectangle 
+            (SDL.P (V2 
+                ((G.fromSubpixels screenWidth - w) `quot` 2) 
+                ((G.fromSubpixels screenHeight - h) `quot` 2))) 
+            (V2 w h)
+
+    SDL.copy r texture Nothing (Just rect)
+
+    SDL.destroyTexture texture
+    SDL.freeSurface surface
+
 
 -------------------------------------------------------------------------------
 -- | A single asteroid. Takes 5 arguents:
@@ -329,10 +336,17 @@ instance Drawable Level where
 
 -------------------------------------------------------------------------------
 -- | The current game level.
-newtype Lives = Lives Int
+newtype Lives = Lives CInt
 
 decLives :: Lives -> Lives
 decLives (Lives x) = Lives (x - 1)
+
+instance Drawable Lives where
+    draw r res (Lives x) = let 
+        tex = Res.shipSprite res
+        drawLife n = SDL.copy r tex Nothing (Just rect) where
+            rect = SDL.Rectangle (SDL.P (V2 (n * 32) 96)) (V2 32 32)
+        in sequence_ $ drawLife <$> [1 .. (fromIntegral x)]
 
 -------------------------------------------------------------------------------
 -- | A currently active game
@@ -424,7 +438,7 @@ updateActiveGame dt ks (FinishedLevel time sh bs sc rng liv lev)
         sh' = updateShip dt ks sh
         in (FinishedLevel (time - dt) sh' bs' sc rng liv lev)
 updateActiveGame dt ks (DeadInGame timeLeft as bs sc rng l@(Lives liv) lev)
-    | timeLeft < 0 && liv > 0 && not (shipAsteroidsCollision newShip as) = 
+    | timeLeft < 0 && liv >= 0 && not (shipAsteroidsCollision newShip as) = 
         ActiveGame newShip as bs sc rng (decLives l) lev
     | otherwise = let
         as' = updateAsteroids dt as
@@ -436,22 +450,25 @@ updateActiveGame dt ks (DeadInGame timeLeft as bs sc rng l@(Lives liv) lev)
         in DeadInGame (timeLeft - dt) asteroids bullets score rng l lev
 
 instance Drawable ActiveGame where
-    draw r res (ActiveGame sh as bs sc _ _ lev) =
+    draw r res (ActiveGame sh as bs sc _ liv lev) =
         draw r res as
         <* draw r res bs
         <* draw r res sh
         <* draw r res sc
         <* draw r res lev
-    draw r res (FinishedLevel _ sh bs sc _ _ lev) =
+        <* draw r res liv
+    draw r res (FinishedLevel _ sh bs sc _ liv lev) =
         draw r res bs
         <* draw r res sh
         <* draw r res sc
         <* draw r res lev
-    draw r res (DeadInGame _ as bs sc _ _ lev) =
+        <* draw r res liv
+    draw r res (DeadInGame _ as bs sc _ liv lev) =
         draw r res as
         <* draw r res bs
         <* draw r res sc
         <* draw r res lev
+        <* draw r res liv
 
 
 -------------------------------------------------------------------------------
@@ -498,10 +515,10 @@ updateGame dt _ (GameOver rng timeLeft)
 instance Drawable Game where
     draw r res (BeforeBegin rng asteroids) = do
         draw r res asteroids
-        copyCentre r (Res.pressSpaceText res)
+        writeFontCentred r (Res.regularFont res) "PRESS SPACE TO START"
     draw r res (Active activeGame) = draw r res activeGame
     draw r res (Paused activeGame) = 
         draw r res activeGame
-        *> copyCentre r (Res.pausedText res)
-    draw r res (GameOver _ _) = copyCentre r (Res.gameOverText res)
+        *> writeFontCentred r (Res.bigFont res) "PAUSED"
+    draw r res (GameOver _ _) = writeFontCentred r (Res.bigFont res) "GAME OVER"
      

@@ -20,10 +20,6 @@ data-files:
 - assets/Asteroid3.bmp
 - assets/Asteroid4.bmp
 
-- assets/PressSpaceToBegin.bmp
-- assets/GameOver.bmp
-- assets/Paused.bmp
-
 - assets/PressStart2P.ttf
 
 # Metadata used when publishing your package
