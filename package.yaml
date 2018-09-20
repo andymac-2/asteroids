@@ -11,17 +11,6 @@ extra-source-files:
 - ChangeLog.md
 - licenses/PressStartPlayer2LICENSE.txt
 
-data-files:
-- assets/ShipNoFire.bmp
-- assets/ShipFiring.bmp
-
-- assets/Asteroid1.bmp
-- assets/Asteroid2.bmp
-- assets/Asteroid3.bmp
-- assets/Asteroid4.bmp
-
-- assets/PressStart2P.ttf
-
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
 # category:            Web
@@ -35,11 +24,12 @@ dependencies:
 - base >= 4.7 && < 5
 - sdl2
 - sdl2-ttf
+- sdl2-image
 - random
 - mtl
 - text
-
-
+- file-embed
+  
 library:
   source-dirs: src
 

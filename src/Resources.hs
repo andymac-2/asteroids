@@ -1,12 +1,15 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Resources
     ( Resources (..)
-    , textureFromBmp
     , loadResources
     ) where
 
 import qualified SDL as SDL
 import Paths_asteroids (getDataFileName)
 import qualified SDL.Font as Font
+import SDL.Image (decodeTexture)
+
+import Data.FileEmbed (embedFile)
 
 
 data Resources = Resources
@@ -22,28 +25,18 @@ data Resources = Resources
 maxAsteroidSpriteIndex :: Int
 maxAsteroidSpriteIndex = 3
 
-textureFromBmp :: SDL.Renderer -> FilePath -> IO SDL.Texture
-textureFromBmp renderer path = do
-    fileName <- getDataFileName path
-    surface <- SDL.loadBMP fileName
-    SDL.createTextureFromSurface renderer surface
-
-loadFont :: FilePath -> Font.PointSize -> IO Font.Font
-loadFont path size = do
-    fileName <- getDataFileName path
-    Font.load fileName size
 
 loadResources :: SDL.Renderer -> IO Resources
 loadResources r = Resources 
-    <$> textureFromBmp r "assets/ShipNoFire.bmp"    -- shipSprite
-    <*> textureFromBmp r "assets/ShipFiring.bmp"    -- shipSpriteFiring
-    <*> traverse (textureFromBmp r)                     -- asteroidSprites
-        [ "assets/Asteroid1.bmp"
-        , "assets/Asteroid2.bmp"
-        , "assets/Asteroid3.bmp"
-        , "assets/Asteroid4.bmp"
+    <$> decodeTexture r $(embedFile "assets/ShipNoFire.bmp")    -- shipSprite
+    <*> decodeTexture r $(embedFile "assets/ShipFiring.bmp")    -- shipSpriteFiring
+    <*> traverse (decodeTexture r)                     -- asteroidSprites
+        [ $(embedFile  "assets/Asteroid1.bmp")
+        , $(embedFile  "assets/Asteroid2.bmp")
+        , $(embedFile  "assets/Asteroid3.bmp")
+        , $(embedFile  "assets/Asteroid4.bmp")
         ]
-    <*> loadFont "assets/PressStart2P.ttf" 17           -- regularFont
-    <*> loadFont "assets/PressStart2P.ttf" 40           -- bigFont
+    <*> Font.decode $(embedFile "assets/PressStart2P.ttf") 17       -- regularFont
+    <*> Font.decode $(embedFile "assets/PressStart2P.ttf") 40    -- bigFont
 
 
