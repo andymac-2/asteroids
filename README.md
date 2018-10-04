@@ -1,7 +1,7 @@
 # Asteroids
 (C) Andrew Pritchard 2018 Some BSD license I dunno.
 
-![A screenshot Yay!](docs/screesnshot.xcf)
+![A screenshot Yay!](docs/screenshot.xcf)
 
 To play: arrow keys to rotate, and move. `space` to fire. `P` to pause. `Q` to quit.
 
